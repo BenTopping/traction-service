@@ -38,7 +38,7 @@ jobs:
       env:
         DBPORT: ${{ job.services.mysql.ports[3306] }}
       run: |
-        cp config/database.yml.travis config/database.yml
+        cp config/database.yml.example config/database.yml
         cp config/mailer.yml.example config/mailer.yml
         cp config/bunny.yml.example config/bunny.yml
         cp config/env_constants.yml.example config/env_constants.yml
