@@ -3,9 +3,13 @@
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 
+  post '/v2', to: 'graphql#execute'
+  get '/v2/docs(/*path(.:format))', to: 'graphql#show_docs'
+
   namespace :v1 do
     jsonapi_resources :samples, only: %i[index create]
     jsonapi_resources :tags,    only: %i[index create update destroy]
+    jsonapi_resources :tag_sets,    only: %i[index create update destroy]
 
     namespace :saphyr do
       jsonapi_resources :runs,          only: %i[index create show update destroy]
@@ -24,17 +28,12 @@ Rails.application.routes.draw do
       end
       jsonapi_resources :plates,        only: %i[index create update destroy]
       jsonapi_resources :wells,         only: %i[index create update destroy] do
-        scope module: :wells do
-          # TODO: converting this to jsonapi_resources causes a resource not
-          # found error.
-          resources :libraries, only: %i[create]
-        end
       end
-      # TODO: converting this to jsonapi_resources causes test failure
-      resources :libraries,     only: %i[index create destroy]
-      jsonapi_resources :requests,      only: %i[index create update destroy]
-      jsonapi_resources :wells,         only: %i[index create update destroy]
-      jsonapi_resources :tubes, only: %i[index]
+      jsonapi_resources :libraries,       only: %i[index create update destroy]
+      jsonapi_resources :request_library, only: %i[index update]
+      jsonapi_resources :requests,        only: %i[index create update destroy]
+      jsonapi_resources :wells,           only: %i[index create update destroy]
+      jsonapi_resources :tubes,           only: %i[index]
     end
   end
 end

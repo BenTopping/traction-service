@@ -12,7 +12,7 @@ module Pipelines
     module Model
       extend ActiveSupport::Concern
 
-      include Material
+      include TubeMaterial
 
       included do
         has_one :request, class_name: '::Request', as: :requestable, dependent: :nullify
@@ -21,7 +21,7 @@ module Pipelines
         delegate :name, to: :sample, prefix: :sample
         delegate :species, to: :sample, prefix: :sample
 
-        validates(*to_s.deconstantize.constantize.request_attributes, presence: true)
+        validates(*to_s.deconstantize.constantize.required_request_attributes, presence: true)
       end
     end
   end

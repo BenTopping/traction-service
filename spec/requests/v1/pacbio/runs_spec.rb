@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe 'RunsController', type: :request do
 
   context '#get' do
-    let!(:run1) { create(:pacbio_run) }
-    let!(:run2) { create(:pacbio_run) }
+    let!(:run1) { create(:pacbio_run, state: 'pending') }
+    let!(:run2) { create(:pacbio_run, state: 'started') }
     let!(:plate1) { create(:pacbio_plate, run: run1) }
     let!(:plate2) { create(:pacbio_plate, run: run2) }
 
@@ -22,18 +22,24 @@ RSpec.describe 'RunsController', type: :request do
       json = ActiveSupport::JSON.decode(response.body)
 
       expect(json['data'][0]['attributes']['name']).to eq(run1.name)
-      expect(json['data'][0]['attributes']['template_prep_kit_box_barcode']).to eq(run1.template_prep_kit_box_barcode)
       expect(json['data'][0]['attributes']['binding_kit_box_barcode']).to eq(run1.binding_kit_box_barcode)
       expect(json['data'][0]["attributes"]["sequencing_kit_box_barcode"]).to eq(run1.sequencing_kit_box_barcode)
       expect(json['data'][0]['attributes']['dna_control_complex_box_barcode']).to eq(run1.dna_control_complex_box_barcode)
       expect(json['data'][0]['attributes']['system_name']).to eq(run1.system_name)
+      expect(json['data'][0]['attributes']['created_at']).to eq(run1.created_at.to_s(:us))
+      expect(json['data'][0]['attributes']['state']).to eq(run1.state)
+      expect(json['data'][0]['attributes']['comments']).to eq(run1.comments)
+      expect(json['data'][0]['attributes']['all_wells_have_libraries']).to eq(run1.all_wells_have_libraries?)
 
-      expect(json['data'][1]['attributes']['name']).to eq(run2.name)
-      expect(json['data'][1]['attributes']['template_prep_kit_box_barcode']).to eq(run2.template_prep_kit_box_barcode)
-      expect(json['data'][1]['attributes']['binding_kit_box_barcode']).to eq(run2.binding_kit_box_barcode)
-      expect(json['data'][1]["attributes"]["sequencing_kit_box_barcode"]).to eq(run2.sequencing_kit_box_barcode)
-      expect(json['data'][1]['attributes']['dna_control_complex_box_barcode']).to eq(run2.dna_control_complex_box_barcode)
-      expect(json['data'][1]['attributes']['system_name']).to eq(run2.system_name)
+      run = json['data'][1]['attributes']
+      expect(run['name']).to eq(run2.name)
+      expect(run['binding_kit_box_barcode']).to eq(run2.binding_kit_box_barcode)
+      expect(run["sequencing_kit_box_barcode"]).to eq(run2.sequencing_kit_box_barcode)
+      expect(run['dna_control_complex_box_barcode']).to eq(run2.dna_control_complex_box_barcode)
+      expect(run['system_name']).to eq(run2.system_name)
+      expect(run['created_at']).to eq(run2.created_at.to_s(:us))
+      expect(run['state']).to eq(run2.state)
+      expect(run['comments']).to eq(run2.comments)
     end
 
     it 'returns the correct relationships' do
@@ -76,11 +82,12 @@ RSpec.describe 'RunsController', type: :request do
         post v1_pacbio_runs_path, params: body, headers: json_api_headers
         run = Pacbio::Run.first
         expect(run.name).to be_present
-        expect(run.template_prep_kit_box_barcode).to be_present
+        expect(run.state).to be_present
         expect(run.binding_kit_box_barcode).to be_present
         expect(run.sequencing_kit_box_barcode).to be_present
         expect(run.dna_control_complex_box_barcode).to be_present
         expect(run.system_name).to be_present
+        expect(run.comments).to be_present
       end
 
     end
@@ -108,8 +115,6 @@ RSpec.describe 'RunsController', type: :request do
         post v1_pacbio_runs_path, params: body, headers: json_api_headers
         json = ActiveSupport::JSON.decode(response.body)
         errors = json['data']['errors']
-        expect(errors['name']).to be_present
-        expect(errors['template_prep_kit_box_barcode']).to be_present
         expect(errors['binding_kit_box_barcode']).to be_present
         expect(errors['sequencing_kit_box_barcode']).to be_present
         expect(errors['dna_control_complex_box_barcode']).to be_present
@@ -132,7 +137,7 @@ RSpec.describe 'RunsController', type: :request do
             type: "runs",
             id: @run.id,
             attributes: {
-              name: "an updated name"
+              state: "started"
             }
           }
         }.to_json
@@ -146,7 +151,7 @@ RSpec.describe 'RunsController', type: :request do
       it 'updates a run' do
         patch v1_pacbio_run_path(@run), params: body, headers: json_api_headers
         @run.reload
-        expect(@run.name).to eq "an updated name"
+        expect(@run.state).to eq "started"
       end
 
       it 'returns the correct attributes' do
@@ -164,7 +169,7 @@ RSpec.describe 'RunsController', type: :request do
             type: "runs",
             id: 123,
             attributes: {
-              name: "an updated name"
+              state: "started"
             }
           }
         }.to_json
@@ -178,6 +183,12 @@ RSpec.describe 'RunsController', type: :request do
       it 'has an error message' do
         patch v1_pacbio_run_path(123), params: body, headers: json_api_headers
         expect(JSON.parse(response.body)["data"]).to include("errors" => "Couldn't find Pacbio::Run with 'id'=123")
+      end
+
+      it 'does not update a run' do
+        patch v1_saphyr_run_path(123), params: body, headers: json_api_headers
+        @run.reload
+        expect(@run).to be_pending
       end
     end
 
@@ -202,8 +213,8 @@ RSpec.describe 'RunsController', type: :request do
       json = ActiveSupport::JSON.decode(response.body)
 
       expect(json['data']['id']).to eq(run.id.to_s)
+      expect(json['data']['attributes']['state']).to eq(run.state)
       expect(json['data']['attributes']['name']).to eq(run.name)
-      expect(json['data']['attributes']['template_prep_kit_box_barcode']).to eq(run.template_prep_kit_box_barcode)
       expect(json['data']['attributes']['binding_kit_box_barcode']).to eq(run.binding_kit_box_barcode)
       expect(json['data']["attributes"]["sequencing_kit_box_barcode"]).to eq(run.sequencing_kit_box_barcode)
       expect(json['data']['attributes']['dna_control_complex_box_barcode']).to eq(run.dna_control_complex_box_barcode)
@@ -271,8 +282,8 @@ RSpec.describe 'RunsController', type: :request do
   context '#sample_sheet' do
     after(:each) { File.delete('sample_sheet.csv') if File.exists?('sample_sheet.csv') }
 
-    let(:well1)   { create(:pacbio_well_with_libraries, sequencing_mode: 'CCS') }
-    let(:well2)   { create(:pacbio_well_with_libraries, sequencing_mode: 'CLR') }
+    let(:well1)   { create(:pacbio_well_with_request_libraries) }
+    let(:well2)   { create(:pacbio_well_with_request_libraries) }
     let(:plate)   { create(:pacbio_plate, wells: [well1, well2]) }
     let(:run)     { create(:pacbio_run, plate: plate) }
 

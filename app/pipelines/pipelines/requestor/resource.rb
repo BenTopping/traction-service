@@ -11,10 +11,10 @@ module Pipelines
       # Resource ClassMethods
       module ClassMethods
         # Use the parent_name method in resource which is equivalent to module_path
-        # Something to keey an eye on.
+        # Something to keep an eye on.
         # @return [String] the name of the pipeline e.g. 'Pacbio'
         def pipeline
-          @pipeline ||= parent_name.demodulize
+          @pipeline ||= module_parent_name.demodulize
         end
 
         # @return [Constant] the constant of the pipeline e.g. Pacbio
@@ -39,7 +39,7 @@ module Pipelines
         end
 
         def created_at
-          @model.created_at.strftime('%m/%d/%Y %I:%M')
+          @model.created_at.to_s(:us)
         end
       end
     end

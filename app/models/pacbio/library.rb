@@ -8,20 +8,23 @@ module Pacbio
   # A library can be sequenced in more than one well.
   # This is achieved using a has many through relationship
   class Library < ApplicationRecord
-    include Material
+    include TubeMaterial
     include Uuidable
     include Librarian
 
-    validates :volume, :concentration, :library_kit_barcode, :fragment_size, presence: true
+    validates :volume, :concentration, :template_prep_kit_box_barcode,
+              :fragment_size, presence: true
 
     has_many :well_libraries, class_name: 'Pacbio::WellLibrary', foreign_key: :pacbio_library_id,
                               dependent: :nullify, inverse_of: :library
     has_many :wells, class_name: 'Pacbio::Well', through: :well_libraries
     has_many :request_libraries, class_name: 'Pacbio::RequestLibrary',
-                                 foreign_key: :pacbio_library_id, dependent: :nullify,
+                                 foreign_key: :pacbio_library_id, dependent: :destroy,
                                  inverse_of: :library, autosave: true
 
     has_many :requests, class_name: 'Pacbio::Request', through: :request_libraries
+
+    delegate :barcode, to: :tube
 
     def sample_names
       return '' if requests.blank?

@@ -18,6 +18,10 @@ AllCops:
     - 'bin/*'
     - 'config/application.rb'
     - 'config/initializers/content_security_policy.rb'
+    # Exclude auto-generated GraphQL classes
+    - 'app/controllers/graphql_controller.rb'
+    - 'app/graphql/mutations/base_*'
+    - 'app/graphql/types/base_*'
 
 # The cop is meant to enforce conventions regarding variables containing numbers
 # However in 0.43.0 it is bugged. Both changed on master and disabled by default
@@ -41,7 +45,7 @@ Metrics/BlockLength:
     - 'config/routes.rb'
     - 'lib/tasks/*'
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 100
   Exclude:
     - 'lib/tasks/*'
@@ -51,7 +55,7 @@ Metrics/MethodLength:
   Exclude:
     - 'db/migrate/*'
 
-Layout/IndentFirstArrayElement:
+Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 Style/ClassAndModuleChildren:
   Enabled: false
@@ -66,3 +70,45 @@ Style/NumericPredicate:
   AutoCorrect: false
   Enabled: true
   EnforcedStyle: comparison
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: false
+
+Style/HashTransformValues:
+  Enabled: false
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
+Style/ExponentialNotation:
+  Enabled: true
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: true 
+
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: true 
+
+Lint/MixedRegexpCaptureTypes:
+  Enabled: true
+
+Style/RedundantRegexpCharacterClass:
+  Enabled: true
+
+Style/RedundantRegexpEscape:
+  Enabled: true
+
+Style/SlicingWithRange:
+  Enabled: true
+
+Style/RedundantFetchBlock:
+  Enabled: true

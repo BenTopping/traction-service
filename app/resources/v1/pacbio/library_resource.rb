@@ -6,8 +6,8 @@ module V1
     class LibraryResource < JSONAPI::Resource
       model_name 'Pacbio::Library'
 
-      attributes :state, :barcode, :volume, :concentration, :library_kit_barcode, :fragment_size,
-                 :created_at, :deactivated_at, :sample_names
+      attributes :state, :barcode, :volume, :concentration, :template_prep_kit_box_barcode,
+                 :fragment_size, :created_at, :deactivated_at, :sample_names
 
       has_many :requests, class_name: 'RequestLibrary', relation_name: :request_libraries
       has_one :tube
@@ -17,11 +17,11 @@ module V1
       end
 
       def created_at
-        @model.created_at.strftime('%m/%d/%Y %I:%M')
+        @model.created_at.to_s(:us)
       end
 
       def deactivated_at
-        @model&.deactivated_at&.strftime('%m/%d/%Y %I:%M')
+        @model&.deactivated_at&.to_s(:us)
       end
     end
   end

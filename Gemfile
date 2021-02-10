@@ -8,11 +8,14 @@ ruby '2.6.3'
 gem 'bootsnap', '>= 1.1.0', require: false # Reduces boot times through caching
 gem 'bunny'
 gem 'exception_notification'
-gem 'jsonapi-resources'
+gem 'graphql'
+gem 'graphql-client'
+gem 'graphql-docs'
+gem 'jsonapi-resources', '~> 0.9.10'
 gem 'mysql2'
 gem 'puma', '~> 3.11' # Use Puma as the app server
 gem 'rack-cors' # Use Rack CORS for handling CORS, making cross-origin AJAX possible
-gem 'rails', '~> 5.2.1'
+gem 'rails', '~> 6.0.3.1'
 gem 'rubocop-rails'
 
 group :development do

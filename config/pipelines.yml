@@ -45,13 +45,16 @@ default: &default
         last_updated: *timestamp
         id_pac_bio_run_lims:
           type: :model
-          value: run.id
+          value: run.name
         pac_bio_run_uuid:
           type: :model
           value: run.uuid
-        plate_barcode:
+        pac_bio_run_name:
           type: :model
-          value: barcode
+          value: run.name
+        plate_barcode:
+          type: :string
+          value: "plate_barcode placeholder"
         plate_uuid_lims:
           type: :model
           value: uuid
@@ -92,63 +95,211 @@ default: &default
                   value: tag.oligo
                 tag_set_id_lims:
                   type: :model
-                  value: tag.group_id
+                  value: tag.tag_set.id
                 tag_identifier:
                   type: :model
-                  value: tag.id
+                  value: tag.group_id
                 tag_set_name:
                   type: :model
-                  value: tag.set_name
+                  value: tag.tag_set_name
     sample_sheet:
       columns:
         System Name:
           type: :model
           value: plate.run.system_name
+          populate:
+            for:
+              - :well
+            with: :well
         Run Name:
           type: :model
           value: plate.run.name
+          populate:
+            for:
+              - :well
+            with: :well
+        Is Collection:
+          type: :model
+          value: collection?
+          populate:
+            for:
+              - :well
+              - :sample
+            with: :row_type
         Sample Well:
           type: :model
-          value: position
+          value: position_leading_zero
+          populate:
+            for:
+              - :well
+              - :sample
+            with: :well
         Sample Name:
           type: :model
           value: sample_names
+          populate:
+            for:
+              - :well
+            with: :well
         Movie Time per SMRT Cell (hours):
           type: :model
           value: movie_time
+          populate:
+            for:
+              - :well
+            with: :well
         Insert Size (bp):
           type: :model
           value: insert_size
-        Template Prep Kit (Box Barcode):
+          populate:
+            for:
+              - :well
+            with: :well
+        Template Prep Kit Box Barcode:
           type: :model
-          value: plate.run.template_prep_kit_box_barcode
-        Binding Kit (Box Barcode):
+          value: template_prep_kit_box_barcode
+          populate:
+            for:
+              - :well
+            with: :well
+        Binding Kit Box Barcode:
           type: :model
           value: plate.run.binding_kit_box_barcode
-        Sequencing Kit (Box Barcode):
+          populate:
+            for:
+              - :well
+            with: :well
+          populate_on_row_type: :well
+        Sequencing Kit Box Barcode:
           type: :model
           value: plate.run.sequencing_kit_box_barcode
-        Sequencing Mode (CLR/ CCS):
-          type: :model
-          value: sequencing_mode
-        On plate loading concentration (mP):
+          populate:
+            for:
+              - :well
+            with: :well
+        On-Plate Loading Concentration (pM):
           type: :model
           value: on_plate_loading_concentration
-        DNA Control Complex (Box Barcode):
+          populate:
+            for:
+              - :well
+            with: :well
+        DNA Control Complex Box Barcode:
           type: :model
           value: plate.run.dna_control_complex_box_barcode
-        Generate CCS Data:
+          populate:
+            for:
+              - :well
+            with: :well
+        Run Comments:
           type: :model
-          value: generate_ccs_data
+          value: plate.run.comments
+          populate:
+            for:
+              - :well
+            with: :well
+        Sample is Barcoded:
+          type: :model
+          value: all_libraries_tagged
+          populate:
+            for:
+              - :well
+            with: :well
+        Barcode Name:
+          type: :model
+          value: barcode_name
+          populate:
+            for:
+              - :sample
+            with: :sample
+        Barcode Set:
+          type: :model
+          value: barcode_set
+          populate:
+            for:
+              - :well
+            with: :well
+        Same Barcodes on Both Ends of Sequence:
+          type: :model
+          value: same_barcodes_on_both_ends_of_sequence
+          populate:
+            for:
+              - :well
+            with: :well
+        Bio Sample Name:
+          type: :model
+          value: request.sample_name
+          populate:
+            for:
+              - :sample
+            with: :sample
+        Automation Parameters:
+          type: :model
+          value: automation_parameters
+          populate:
+            for:
+              - :well
+            with: :well
+        Generate HiFi Reads:
+          type: :model
+          value: generate_hifi
+          populate:
+            for:
+              - :well
+            with: :well
+        CCS Analysis Output - Include Kinetics Information:
+          type: :model
+          value: ccs_analysis_output
+          populate:
+            for:
+              - :well
+            with: :well
+  ont:
+    message:
+      lims: *lims
+      key: oseq_flowcell_run
+      fields:
+        last_updated: *timestamp
+        experiment_name:
+          type: :model
+          value: experiment_name
+        instrument_name:
+          type: :string
+          value: GXB02004
+        flowcells:
+          type: :array
+          value: flowcells
+          children:
+            id_flowcell_lims:
+              type: :model
+              value: uuid
+            instrument_slot:
+              type: :model
+              value: position
+            samples:
+              type: :array
+              value: requests
+              children:
+                sample_uuid:
+                  type: :model
+                  value: external_id
+                study_uuid:
+                  type: :constant
+                  value: Pipelines::ConstantsAccessor.ont_covid_study_uuid
+                tag_identifier:
+                  type: :model
+                  value: tags.first.group_id
+                tag_sequence:
+                  type: :model
+                  value: tags.first.oligo
+                tag_set_id_lims:
+                  type: :model
+                  value: tags.first.tag_set.id
+                tag_set_name:
+                  type: :model
+                  value: tags.first.tag_set.name
 
-development:
-  <<: *default
-
-test:
-  <<: *default
-
-staging:
-  <<: *default
-
-production:
-  <<: *default
+development: *default
+test: *default
+uat: *default
+production: *default

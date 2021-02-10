@@ -34,11 +34,11 @@ RSpec.describe 'RunsController', type: :request do
       expect(json['data'][0]['attributes']['state']).to eq(run1.state)
       expect(json['data'][0]['attributes']['name']).to eq(run1.name)
       expect(json['data'][0]['attributes']['chip_barcode']).to eq(run1.chip.barcode)
-      expect(json['data'][0]["attributes"]["created_at"]).to eq(run1.created_at.strftime("%m/%d/%Y %H:%M"))
+      expect(json['data'][0]["attributes"]["created_at"]).to eq(run1.created_at.to_s(:us))
       expect(json['data'][1]['attributes']['state']).to eq(run2.state)
       expect(json['data'][1]['attributes']['name']).to eq(run2.name)
       expect(json['data'][1]['attributes']['chip_barcode']).to eq(run2.chip.barcode)
-      expect(json['data'][1]["attributes"]["created_at"]).to eq(run2.created_at.strftime("%m/%d/%Y %H:%M"))
+      expect(json['data'][1]["attributes"]["created_at"]).to eq(run2.created_at.to_s(:us))
     end
 
     it 'returns the correct relationships' do
@@ -173,9 +173,7 @@ RSpec.describe 'RunsController', type: :request do
 
   context '#show' do
     let!(:run) { create(:saphyr_run, state: 'pending') }
-    let!(:chip) { create(:saphyr_chip_with_flowcells, run: run) }
-    let(:library1) { create(:library, flowcell: chip.flowcells[0]) }
-    let(:library2) { create(:library, flowcell: chip.flowcells[1]) }
+    let!(:chip) { create(:saphyr_chip_with_flowcells_and_library_in_tube, run: run) }
 
     it 'returns the runs' do
       get v1_saphyr_run_path(run), headers: json_api_headers
@@ -226,6 +224,9 @@ RSpec.describe 'RunsController', type: :request do
       expect(json['included'][2]['type']).to eq "flowcells"
       expect(json['included'][2]['attributes']['position']).to eq chip.flowcells[1].position
       expect(json['included'][2]['relationships']['library']).to be_present
+
+      expect(json['included'][1]['relationships']['library']["data"]["id"]).to eq chip.flowcells[0].library.id.to_s
+      expect(json['included'][2]['relationships']['library']["data"]["id"]).to eq chip.flowcells[1].library.id.to_s
     end
 
   end

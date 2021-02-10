@@ -3,10 +3,8 @@ require "rails_helper"
 RSpec.describe 'LibrariesController', type: :request do
 
   context '#get' do
-    let!(:library1) { create(:saphyr_library) }
-    let!(:library2) { create(:saphyr_library) }
-    let!(:tube1) { create(:tube, material: library1)}
-    let!(:tube2) { create(:tube, material: library2)}
+    let!(:library1) { create(:saphyr_library_in_tube) }
+    let!(:library2) { create(:saphyr_library_in_tube) }
 
     it 'returns a list of libraries' do
       get v1_saphyr_libraries_path, headers: json_api_headers
@@ -25,21 +23,19 @@ RSpec.describe 'LibrariesController', type: :request do
       expect(json['data'][0]['attributes']['barcode']).to eq(library1.tube.barcode)
       expect(json['data'][0]['attributes']['sample_name']).to eq(library1.request.sample_name)
       expect(json['data'][0]['attributes']['enzyme_name']).to eq(library1.enzyme.name)
-      expect(json['data'][0]["attributes"]["created_at"]).to eq(library1.created_at.strftime("%m/%d/%Y %I:%M"))
+      expect(json['data'][0]["attributes"]["created_at"]).to eq(library1.created_at.to_s(:us))
       expect(json['data'][0]["attributes"]["deactivated_at"]).to eq(nil)
 
       expect(json['data'][1]['attributes']['state']).to eq(library2.state)
       expect(json['data'][1]['attributes']['barcode']).to eq(library2.tube.barcode)
       expect(json['data'][1]['attributes']['enzyme_name']).to eq(library2.enzyme.name)
-      expect(json['data'][1]["attributes"]["created_at"]).to eq(library2.created_at.strftime("%m/%d/%Y %I:%M"))
+      expect(json['data'][1]["attributes"]["created_at"]).to eq(library2.created_at.to_s(:us))
       expect(json['data'][1]["attributes"]["deactivated_at"]).to eq(nil)
     end
 
     context 'when some libraries are deactivated' do
-      let!(:library3) { create(:saphyr_library) }
-      let!(:library4) { create(:saphyr_library, deactivated_at: DateTime.now) }
-      let!(:tube3) { create(:tube, material: library3)}
-      let!(:tube4) { create(:tube, material: library4)}
+      let!(:library3) { create(:saphyr_library_in_tube) }
+      let!(:library4) { create(:saphyr_library_in_tube, deactivated_at: DateTime.now) }
 
       it 'only returns active libraries' do
         get v1_saphyr_libraries_path, headers: json_api_headers
@@ -82,7 +78,7 @@ RSpec.describe 'LibrariesController', type: :request do
           post v1_saphyr_libraries_path, params: body, headers: json_api_headers
           expect(Saphyr::Library.last.tube).to be_present
           tube_id = Saphyr::Library.last.tube.id
-          expect(Tube.find(tube_id).material).to eq Saphyr::Library.last
+          expect(Tube.find(tube_id).materials.first).to eq Saphyr::Library.last
         end
 
         it 'creates a library with a request' do
@@ -227,8 +223,7 @@ RSpec.describe 'LibrariesController', type: :request do
 
   context '#destroy' do
     context 'on success' do
-      let!(:library) { create(:saphyr_library) }
-      let!(:tube) { create(:tube, material: library)}
+      let!(:library) { create(:saphyr_library_in_tube) }
 
       it 'deactivates the library' do
         delete "/v1/saphyr/libraries/#{library.id}", headers: json_api_headers
